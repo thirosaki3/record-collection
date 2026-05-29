@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>レコードコレクション</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#111;color:#fff;min-height:100vh}
+
+/* ヘッダー */
+.header{position:sticky;top:0;z-index:100;background:#111;padding:12px 16px;border-bottom:1px solid #333}
+.header h1{font-size:16px;font-weight:600;color:#fff;margin-bottom:10px;letter-spacing:.5px}
+.search-wrap{position:relative}
+.search-wrap input{width:100%;padding:10px 16px 10px 40px;background:#222;border:1px solid #444;border-radius:24px;color:#fff;font-size:15px;outline:none}
+.search-wrap input::placeholder{color:#666}
+.search-wrap input:focus{border-color:#888}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#666;font-size:18px}
+.search-clear{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#666;font-size:18px;cursor:pointer;display:none}
+
+/* 件数 */
+.count{padding:8px 16px;font-size:12px;color:#666}
+
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:0 0 80px}
+@media(min-width:480px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:700px){.grid{grid-template-columns:repeat(5,1fr)}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(6,1fr)}}
+
+.card{position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#222}
+.card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.card:active img{transform:scale(.96)}
+.card .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#555;text-align:center;padding:4px;line-height:1.3}
+
+/* モーダル */
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);overflow-y:auto}
+.modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:#1a1a1a;width:100%;max-width:480px;min-height:100vh;padding:0 0 40px}
+@media(min-width:520px){.modal{min-height:auto;margin:40px auto;border-radius:16px;overflow:hidden}}
+
+.modal-img-wrap{position:relative;background:#000}
+.modal-img-wrap img{width:100%;display:block;max-height:70vw;object-fit:contain}
+@media(min-width:520px){.modal-img-wrap img{max-height:320px}}
+
+.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+
+.modal-body{padding:16px}
+.modal-artist{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3}
+.modal-album{font-size:16px;color:#ccc;margin-bottom:4px}
+.modal-artist-en{font-size:13px;color:#888;margin-bottom:12px}
+.modal-meta{display:grid;gap:6px;margin-bottom:16px}
+.meta-row{display:flex;gap:8px;font-size:13px}
+.meta-label{color:#666;min-width:80px;flex-shrink:0}
+.meta-value{color:#ccc;word-break:break-all}
+
+/* リンクボタン */
+.links{display:grid;gap:8px}
+.link-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:500;transition:opacity .15s}
+.link-btn:active{opacity:.7}
+.link-btn .icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.btn-apple{background:#1c1c1e;color:#fff;border:1px solid #333}
+.btn-apple .icon{background:#fc3c44}
+.btn-spotify{background:#1c1c1e;color:#fff;border:1px solid #333}
+.btn-spotify .icon{background:#1db954}
+.btn-youtube{background:#1c1c1e;color:#fff;border:1px solid #333}
+.btn-youtube .icon{background:#ff0000}
+.btn-discogs{background:#1c1c1e;color:#fff;border:1px solid #333}
+.btn-discogs .icon{background:#333;font-size:11px;font-weight:700;color:#fff}
+
+/* 原寸ボタン */
+.full-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#222;border:1px solid #444;border-radius:10px;color:#aaa;font-size:13px;text-decoration:none;margin-bottom:12px;cursor:pointer}
+.full-btn:active{opacity:.7}
+
+/* ローディング */
+.loading{text-align:center;padding:60px 20px;color:#666;font-size:15px}
+
+/* 空 */
+.empty{text-align:center;padding:60px 20px;color:#555;font-size:15px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎵 レコードコレクション</h1>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="search" placeholder="アーティスト名・アルバムタイトルで検索" autocomplete="off">
+    <span class="search-clear" id="clear-btn">✕</span>
+  </div>
+</div>
+
+<div class="count" id="count"></div>
+<div class="grid" id="grid"></div>
+<div class="loading" id="loading">読み込み中...</div>
+<div class="empty" id="empty" style="display:none">該当するレコードが見つかりません</div>
+
+<!-- モーダル -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal">
+    <div class="modal-img-wrap">
+      <img id="modal-img" src="" alt="">
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-artist" id="modal-artist"></div>
+      <div class="modal-album" id="modal-album"></div>
+      <div class="modal-artist-en" id="modal-artist-en"></div>
+      <div class="modal-meta" id="modal-meta"></div>
+      <a class="full-btn" id="full-img-btn" href="#" target="_blank">🔍 原寸画像を見る</a>
+      <div class="links" id="modal-links"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let ALL = [];
+let filtered = [];
+const THUMB = 'thumbs/';
+const IMAGES = 'images/';
+const PAGE = 60;
+let rendered = 0;
+
+async function init() {
+  try {
+    const r = await fetch('records.json');
+    ALL = await r.json();
+    document.getElementById('loading').style.display = 'none';
+    filter('');
+  } catch(e) {
+    document.getElementById('loading').textContent = 'データの読み込みに失敗しました。records.json を確認してください。';
+  }
+}
+
+function filter(q) {
+  q = q.toLowerCase().trim();
+  filtered = q ? ALL.filter(r =>
+    (r.artist_ja||'').toLowerCase().includes(q) ||
+    (r.album_ja||'').toLowerCase().includes(q) ||
+    (r.artist_en||'').toLowerCase().includes(q) ||
+    (r.album_en||'').toLowerCase().includes(q) ||
+    (r.label||'').toLowerCase().includes(q) ||
+    (r.catalog||'').toLowerCase().includes(q)
+  ) : [...ALL];
+
+  rendered = 0;
+  document.getElementById('grid').innerHTML = '';
+  document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
+  document.getElementById('count').textContent = `${filtered.length} 件`;
+  renderMore();
+}
+
+function renderMore() {
+  const grid = document.getElementById('grid');
+  const end = Math.min(rendered + PAGE, filtered.length);
+  const frag = document.createDocumentFragment();
+  for (let i = rendered; i < end; i++) {
+    const rec = filtered[i];
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.dataset.idx = i;
+    const src = THUMB + rec.filename;
+    const label = rec.artist_ja || rec.artist_en || rec.filename;
+    div.innerHTML = `<img src="${src}" alt="${label}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+      <div class="no-img" style="display:none">${label}</div>`;
+    div.addEventListener('click', () => openModal(i));
+    frag.appendChild(div);
+  }
+  grid.appendChild(frag);
+  rendered = end;
+}
+
+// 無限スクロール
+window.addEventListener('scroll', () => {
+  if (rendered < filtered.length &&
+      window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+    renderMore();
+  }
+});
+
+// 検索
+const searchEl = document.getElementById('search');
+const clearBtn = document.getElementById('clear-btn');
+let searchTimer;
+searchEl.addEventListener('input', e => {
+  clearBtn.style.display = e.target.value ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => filter(e.target.value), 200);
+});
+clearBtn.addEventListener('click', () => {
+  searchEl.value = '';
+  clearBtn.style.display = 'none';
+  filter('');
+  searchEl.focus();
+});
+
+// モーダル
+function openModal(idx) {
+  const rec = filtered[idx];
+  document.getElementById('modal-img').src = IMAGES + rec.filename;
+  document.getElementById('modal-artist').textContent = rec.artist_ja || rec.artist_en || '';
+  document.getElementById('modal-album').textContent = rec.album_ja || rec.album_en || '';
+  document.getElementById('modal-artist-en').textContent =
+    (rec.artist_en && rec.artist_en !== (rec.artist_ja||'')) ? rec.artist_en + (rec.album_en ? ' / ' + rec.album_en : '') : '';
+
+  const meta = [];
+  if (rec.label)   meta.push(['レーベル', rec.label]);
+  if (rec.catalog) meta.push(['カタログ', rec.catalog]);
+  if (rec.side && rec.side !== '不明') meta.push(['面', rec.side]);
+  if (rec.discogs_id) meta.push(['Discogs', rec.discogs_id]);
+  document.getElementById('modal-meta').innerHTML = meta.map(([k,v]) =>
+    `<div class="meta-row"><span class="meta-label">${k}</span><span class="meta-value">${v}</span></div>`
+  ).join('');
+
+  // 原寸ボタン
+  const fullBtn = document.getElementById('full-img-btn');
+  fullBtn.href = IMAGES + rec.filename;
+
+  // リンクボタン
+  const links = [];
+  if (rec.apple_url)   links.push(`<a class="link-btn btn-apple" href="${rec.apple_url}" target="_blank"><span class="icon">🎵</span>Apple Musicで開く</a>`);
+  if (rec.spotify_url) links.push(`<a class="link-btn btn-spotify" href="${rec.spotify_url}" target="_blank"><span class="icon">🎧</span>Spotifyで検索</a>`);
+  if (rec.youtube_url) links.push(`<a class="link-btn btn-youtube" href="${rec.youtube_url}" target="_blank"><span class="icon">▶</span>YouTubeで開く</a>`);
+  if (rec.discogs_url) links.push(`<a class="link-btn btn-discogs" href="${rec.discogs_url}" target="_blank"><span class="icon">D</span>Discogsで開く</a>`);
+  document.getElementById('modal-links').innerHTML = links.join('');
+
+  document.getElementById('modal-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-bg').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-bg')) closeModal();
+});
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+init();
+</script>
+</body>
+</html>
