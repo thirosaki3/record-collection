@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>レコードコレクション</title>
+<title>PICHICHI records</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#111;color:#fff;min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#fff;color:#111;min-height:100vh}
 
 /* ヘッダー */
 .header{position:sticky;top:0;z-index:100;background:#111;padding:12px 16px;border-bottom:1px solid #333}
@@ -82,6 +82,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 
 /* 空 */
 .empty{text-align:center;padding:60px 20px;color:#555;font-size:15px}
+
+/* 削除マーク */
+.card.marked::after{content:'✕';position:absolute;inset:0;background:rgba(220,50,50,.55);display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;font-weight:700}
+.card.marked img{filter:brightness(.5)}
+
+/* 削除バー */
+.delete-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#1a1a1a;border-top:1px solid #444;padding:12px 16px;gap:10px;align-items:center}
+.delete-bar.visible{display:flex}
+.delete-count{flex:1;font-size:14px;color:#ff6b6b;font-weight:500}
+.delete-cancel{padding:10px 18px;background:#333;border:1px solid #555;border-radius:10px;color:#ccc;font-size:14px;cursor:pointer}
+.delete-exec{padding:10px 18px;background:#c0392b;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+.delete-exec:active{background:#922b21}
+
+/* モーダル削除ボタン */
+.mark-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#2a1a1a;border:1px solid #663333;border-radius:10px;color:#ff6b6b;font-size:13px;cursor:pointer;margin-bottom:8px;width:100%}
+.mark-btn.marked{background:#c0392b;border-color:#c0392b;color:#fff}
+.mark-btn:active{opacity:.7}
 </style>
 </head>
 <body>
@@ -106,6 +123,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 <div class="loading" id="loading">読み込み中...</div>
 <div class="empty" id="empty" style="display:none">該当するレコードが見つかりません</div>
 
+<!-- 削除バー -->
+<div class="delete-bar" id="delete-bar">
+  <span class="delete-count" id="delete-count">0件を削除対象にマーク</span>
+  <button class="delete-cancel" id="delete-cancel">キャンセル</button>
+  <button class="delete-exec" id="delete-exec">JSONをダウンロード</button>
+</div>
+
 <!-- モーダル -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal" id="modal">
@@ -118,6 +142,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
       <div class="modal-album" id="modal-album"></div>
       <div class="modal-artist-en" id="modal-artist-en"></div>
       <div class="modal-meta" id="modal-meta"></div>
+      <button class="mark-btn" id="mark-btn">🗑 削除対象にマーク</button>
       <a class="full-btn" id="full-img-btn" href="#" target="_blank">🔍 原寸画像を見る</a>
       <div class="links" id="modal-links"></div>
     </div>
@@ -131,7 +156,9 @@ const THUMB = 'thumbs/';
 const IMAGES = 'images/';
 const PAGE = 60;
 let rendered = 0;
-let sortOrder = 'asc'; // 起動時は昇順
+let sortOrder = 'asc';
+let markedFiles = new Set();
+let currentModalIdx = -1; // 起動時は昇順
 
 function sortKey(r) {
   return (r.artist_en || r.artist_ja || '').toLowerCase();
@@ -208,6 +235,7 @@ function renderMore() {
     div.innerHTML = `<img src="${src}" alt="${label}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
       <div class="no-img" style="display:none">${label}</div>`;
     div.addEventListener('click', () => openModal(i));
+    if (markedFiles.has(rec.filename)) div.classList.add('marked');
     frag.appendChild(div);
   }
   grid.appendChild(frag);
@@ -268,8 +296,47 @@ function openModal(idx) {
   if (rec.discogs_url) links.push(`<a class="link-btn btn-discogs" href="${rec.discogs_url}" target="_blank"><span class="icon">D</span>Discogsで開く</a>`);
   document.getElementById('modal-links').innerHTML = links.join('');
 
+  // 削除マークボタン
+  currentModalIdx = idx;
+  const markBtn = document.getElementById('mark-btn');
+  const filename = rec.filename;
+  updateMarkBtn(markBtn, filename);
+  markBtn.onclick = () => {
+    if (markedFiles.has(filename)) {
+      markedFiles.delete(filename);
+    } else {
+      markedFiles.add(filename);
+    }
+    updateMarkBtn(markBtn, filename);
+    updateDeleteBar();
+    // グリッドのカードにも反映
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(c => {
+      if (filtered[parseInt(c.dataset.idx)]?.filename === filename) {
+        c.classList.toggle('marked', markedFiles.has(filename));
+      }
+    });
+  };
+
   document.getElementById('modal-bg').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function updateMarkBtn(btn, filename) {
+  const marked = markedFiles.has(filename);
+  btn.classList.toggle('marked', marked);
+  btn.textContent = marked ? '✓ 削除対象から外す' : '🗑 削除対象にマーク';
+}
+
+function updateDeleteBar() {
+  const bar = document.getElementById('delete-bar');
+  const count = document.getElementById('delete-count');
+  if (markedFiles.size > 0) {
+    bar.classList.add('visible');
+    count.textContent = `${markedFiles.size}件を削除対象にマーク`;
+  } else {
+    bar.classList.remove('visible');
+  }
 }
 
 document.getElementById('modal-close').addEventListener('click', closeModal);
@@ -283,6 +350,33 @@ function closeModal() {
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// 削除キャンセル
+document.getElementById('delete-cancel').addEventListener('click', () => {
+  markedFiles.clear();
+  updateDeleteBar();
+  document.querySelectorAll('.card.marked').forEach(c => c.classList.remove('marked'));
+});
+
+// JSONダウンロード
+document.getElementById('delete-exec').addEventListener('click', () => {
+  if (markedFiles.size === 0) return;
+  if (!confirm(`${markedFiles.size}件を削除したrecords.jsonをダウンロードします。
+ダウンロード後、~/webapp/records.jsonに上書きしてください。`)) return;
+  const newData = ALL.filter(r => !markedFiles.has(r.filename));
+  const blob = new Blob([JSON.stringify(newData, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'records.json';
+  a.click();
+  alert(`ダウンロード完了。
+~/webapp/records.jsonに上書き後、以下を実行してください：
+
+cd ~/webapp
+git add records.json
+git commit -m "レコード削除"
+git push`);
+});
 
 init();
 </script>
