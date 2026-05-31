@@ -6,7 +6,7 @@
 <title>PICHICHI records</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#fff;color:#111;min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#111;color:#fff;min-height:100vh}
 
 /* ヘッダー */
 .header{position:sticky;top:0;z-index:100;background:#111;padding:12px 16px;border-bottom:1px solid #333}
@@ -17,12 +17,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .search-wrap input:focus{border-color:#888}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#666;font-size:18px}
 .search-clear{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#666;font-size:18px;cursor:pointer;display:none}
-.toolbar{display:flex;align-items:center;justify-content:flex-end;margin-top:8px}
-.sort-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;background:#222;border:1px solid #444;border-radius:20px;color:#ccc;font-size:13px;cursor:pointer;transition:background .15s}
+
+/* ツールバー */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px;flex-wrap:wrap}
+.sort-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;background:#222;border:1px solid #444;border-radius:20px;color:#ccc;font-size:13px;cursor:pointer;transition:background .15s;white-space:nowrap}
 .sort-btn:active{background:#333}
-.sort-btn.asc #sort-arrow{transform:rotate(0deg)}
-.sort-btn.desc #sort-arrow{transform:rotate(180deg)}
 #sort-arrow{display:inline-block;transition:transform .2s;font-size:14px}
+
+/* メンバーボタン */
+.member-btns{display:flex;gap:5px;flex-wrap:wrap}
+.member-btn{padding:6px 10px;background:#222;border:1px solid #555;border-radius:20px;color:#ccc;font-size:13px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.member-btn:active{opacity:.7}
+.member-btn.active{background:#e74c3c;border-color:#e74c3c;color:#fff;font-weight:600}
 
 /* 件数 */
 .count{padding:8px 16px;font-size:12px;color:#666}
@@ -37,19 +43,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
 .card:active img{transform:scale(.96)}
 .card .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#555;text-align:center;padding:4px;line-height:1.3}
+.card.marked::after{content:'✕';position:absolute;inset:0;background:rgba(220,50,50,.55);display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;font-weight:700}
+.card.marked img{filter:brightness(.5)}
 
-/* モーダル */
+/* 削除バー */
+.delete-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#1a1a1a;border-top:1px solid #444;padding:12px 16px;gap:10px;align-items:center}
+.delete-bar.visible{display:flex}
+.delete-count{flex:1;font-size:14px;color:#ff6b6b;font-weight:500}
+.delete-cancel{padding:10px 18px;background:#333;border:1px solid #555;border-radius:10px;color:#ccc;font-size:14px;cursor:pointer}
+.delete-exec{padding:10px 18px;background:#c0392b;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+
+/* モーダル共通 */
 .modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);overflow-y:auto}
 .modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
 .modal{background:#1a1a1a;width:100%;max-width:480px;min-height:100vh;padding:0 0 40px}
 @media(min-width:520px){.modal{min-height:auto;margin:40px auto;border-radius:16px;overflow:hidden}}
-
+.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .modal-img-wrap{position:relative;background:#000}
 .modal-img-wrap img{width:100%;display:block;max-height:70vw;object-fit:contain}
 @media(min-width:520px){.modal-img-wrap img{max-height:320px}}
-
-.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-
 .modal-body{padding:16px}
 .modal-artist{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3}
 .modal-album{font-size:16px;color:#ccc;margin-bottom:4px}
@@ -72,49 +84,81 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .btn-youtube .icon{background:#ff0000}
 .btn-discogs{background:#1c1c1e;color:#fff;border:1px solid #333}
 .btn-discogs .icon{background:#333;font-size:11px;font-weight:700;color:#fff}
-
-/* 原寸ボタン */
 .full-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#222;border:1px solid #444;border-radius:10px;color:#aaa;font-size:13px;text-decoration:none;margin-bottom:12px;cursor:pointer}
-.full-btn:active{opacity:.7}
-
-/* ローディング */
-.loading{text-align:center;padding:60px 20px;color:#666;font-size:15px}
-
-/* 空 */
-.empty{text-align:center;padding:60px 20px;color:#555;font-size:15px}
-
-/* 削除マーク */
-.card.marked::after{content:'✕';position:absolute;inset:0;background:rgba(220,50,50,.55);display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;font-weight:700}
-.card.marked img{filter:brightness(.5)}
-
-/* 削除バー */
-.delete-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#1a1a1a;border-top:1px solid #444;padding:12px 16px;gap:10px;align-items:center}
-.delete-bar.visible{display:flex}
-.delete-count{flex:1;font-size:14px;color:#ff6b6b;font-weight:500}
-.delete-cancel{padding:10px 18px;background:#333;border:1px solid #555;border-radius:10px;color:#ccc;font-size:14px;cursor:pointer}
-.delete-exec{padding:10px 18px;background:#c0392b;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
-.delete-exec:active{background:#922b21}
-
-/* モーダル削除ボタン */
 .mark-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#2a1a1a;border:1px solid #663333;border-radius:10px;color:#ff6b6b;font-size:13px;cursor:pointer;margin-bottom:8px;width:100%}
 .mark-btn.marked{background:#c0392b;border-color:#c0392b;color:#fff}
-.mark-btn:active{opacity:.7}
+
+/* WANTEDに追加ボタン */
+.wanted-add-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#1a2a1a;border:1px solid #336633;border-radius:10px;color:#4caf50;font-size:13px;cursor:pointer;margin-bottom:8px;width:100%}
+.wanted-add-btn:active{opacity:.7}
+
+/* WANTEDモーダル */
+.wanted-modal-bg{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);overflow-y:auto}
+.wanted-modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
+.wanted-modal{background:#1a1a1a;width:100%;max-width:480px;min-height:100vh;padding:0 0 40px;position:relative}
+@media(min-width:520px){.wanted-modal{min-height:auto;margin:40px auto;border-radius:16px;overflow:hidden}}
+.wanted-header{padding:16px;border-bottom:1px solid #333;display:flex;align-items:center;gap:10px}
+.wanted-header h2{font-size:18px;font-weight:700;flex:1}
+.wanted-close{background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;padding:4px}
+
+/* WANTED検索エリア */
+.wanted-search-area{padding:16px;border-bottom:1px solid #222}
+.wanted-search-area label{font-size:12px;color:#888;margin-bottom:6px;display:block}
+.wanted-input-row{display:flex;gap:8px;margin-bottom:10px}
+.wanted-input{flex:1;padding:10px 14px;background:#222;border:1px solid #444;border-radius:10px;color:#fff;font-size:14px;outline:none}
+.wanted-input:focus{border-color:#888}
+.wanted-search-btn{padding:10px 16px;background:#e74c3c;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.wanted-search-btn:active{opacity:.7}
+
+/* Discogs検索結果 */
+.discogs-results{padding:0 16px;max-height:300px;overflow-y:auto}
+.discogs-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #222;cursor:pointer}
+.discogs-item:active{opacity:.7}
+.discogs-item img{width:56px;height:56px;object-fit:cover;border-radius:6px;background:#333;flex-shrink:0}
+.discogs-item-info{flex:1;min-width:0}
+.discogs-item-title{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.discogs-item-sub{font-size:12px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.discogs-searching{text-align:center;padding:20px;color:#666;font-size:14px}
+
+/* WANTEDリスト */
+.wanted-list-area{padding:16px}
+.wanted-list-area h3{font-size:14px;color:#888;margin-bottom:12px}
+.wanted-item{display:flex;align-items:center;gap:12px;padding:10px;background:#222;border-radius:10px;margin-bottom:8px}
+.wanted-item img{width:60px;height:60px;object-fit:cover;border-radius:8px;background:#333;flex-shrink:0}
+.wanted-item-info{flex:1;min-width:0}
+.wanted-item-artist{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wanted-item-album{font-size:12px;color:#aaa;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wanted-item-del{background:none;border:none;color:#666;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0}
+.wanted-item-del:active{color:#ff6b6b}
+.wanted-empty{text-align:center;padding:30px;color:#555;font-size:14px}
+
+/* ローディング・空 */
+.loading{text-align:center;padding:60px 20px;color:#666;font-size:15px}
+.empty{text-align:center;padding:60px 20px;color:#555;font-size:15px}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🎵 PICHICHI records 🎵</h1>
+  <h1>🎵 PICHICHI records</h1>
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input type="search" id="search" placeholder="アーティスト名・アルバムタイトルで検索" autocomplete="off">
     <span class="search-clear" id="clear-btn">✕</span>
   </div>
   <div class="toolbar">
-    <button class="sort-btn" id="sort-btn" aria-label="アーティスト名でソート">
+    <button class="sort-btn" id="sort-btn">
       <span id="sort-label">A→Z</span>
       <span id="sort-arrow">↑</span>
     </button>
+    <div class="member-btns">
+      <button class="member-btn" data-member="浅">浅</button>
+      <button class="member-btn" data-member="伊">伊</button>
+      <button class="member-btn" data-member="追">追</button>
+      <button class="member-btn" data-member="J">J</button>
+      <button class="member-btn" data-member="T">T</button>
+      <button class="member-btn" data-member="広">広</button>
+    </div>
   </div>
 </div>
 
@@ -130,7 +174,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
   <button class="delete-exec" id="delete-exec">JSONをダウンロード</button>
 </div>
 
-<!-- モーダル -->
+<!-- レコード詳細モーダル -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal" id="modal">
     <div class="modal-img-wrap">
@@ -142,6 +186,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
       <div class="modal-album" id="modal-album"></div>
       <div class="modal-artist-en" id="modal-artist-en"></div>
       <div class="modal-meta" id="modal-meta"></div>
+      <button class="wanted-add-btn" id="wanted-add-btn">♡ WANTED LISTに追加</button>
       <button class="mark-btn" id="mark-btn">🗑 削除対象にマーク</button>
       <a class="full-btn" id="full-img-btn" href="#" target="_blank">🔍 原寸画像を見る</a>
       <div class="links" id="modal-links"></div>
@@ -149,28 +194,72 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
   </div>
 </div>
 
+<!-- WANTEDモーダル -->
+<div class="wanted-modal-bg" id="wanted-modal-bg">
+  <div class="wanted-modal">
+    <div class="wanted-header">
+      <h2 id="wanted-title">🎯 WANTED LIST</h2>
+      <button class="wanted-close" id="wanted-close">✕</button>
+    </div>
+
+    <!-- Discogs検索 -->
+    <div class="wanted-search-area">
+      <label>アーティスト名でDiscogsを検索してWANTED LISTに追加</label>
+      <div class="wanted-input-row">
+        <input class="wanted-input" id="wanted-artist-input" placeholder="アーティスト名（英語推奨）">
+        <button class="wanted-search-btn" id="wanted-search-btn">検索</button>
+      </div>
+      <input class="wanted-input" id="wanted-album-input" placeholder="アルバム名で絞り込み（任意）" style="width:100%;margin-bottom:0">
+    </div>
+    <div class="discogs-results" id="discogs-results"></div>
+
+    <!-- WANTEDリスト表示 -->
+    <div class="wanted-list-area">
+      <h3 id="wanted-list-title">WANTED LIST</h3>
+      <div id="wanted-list"></div>
+    </div>
+  </div>
+</div>
+
 <script>
-let ALL = [];
-let filtered = [];
-const THUMB = 'thumbs/';
-const IMAGES = 'images/';
+// ============================================================
+// Supabase設定
+// ============================================================
+const SUPABASE_URL = 'https://tefgzlyssgxtqvsofwjb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_mbNJRAElLapjkLzhGMHkKQ_puey6TBb';
+const DISCOGS_TOKEN = 'IGGtKOFztpWlvnnvIbWvRUrWlOfhgqNbsQavhTdx';
+
+async function sbFetch(path, options={}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...(options.headers||{})
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// ============================================================
+// メイン変数
+// ============================================================
+let ALL = [], filtered = [];
+const THUMB = 'thumbs/', IMAGES = 'images/';
 const PAGE = 60;
 let rendered = 0;
 let sortOrder = 'asc';
 let markedFiles = new Set();
-let currentModalIdx = -1; // 起動時は昇順
+let currentRec = null;
+let currentMember = null;
 
-function sortKey(r) {
-  return (r.artist_en || r.artist_ja || '').toLowerCase();
-}
-
-function applySort(arr) {
-  return arr.sort((a, b) => {
-    const ka = sortKey(a), kb = sortKey(b);
-    return sortOrder === 'asc' ? ka.localeCompare(kb) : kb.localeCompare(ka);
-  });
-}
-
+// ============================================================
+// 初期化
+// ============================================================
 async function init() {
   try {
     const r = await fetch('records.json');
@@ -179,29 +268,34 @@ async function init() {
     updateSortBtn();
     filter('');
   } catch(e) {
-    document.getElementById('loading').textContent = 'データの読み込みに失敗しました。records.json を確認してください。';
+    document.getElementById('loading').textContent = 'データの読み込みに失敗しました。';
   }
 }
 
+// ============================================================
+// ソート
+// ============================================================
+function sortKey(r) { return (r.artist_en || r.artist_ja || '').toLowerCase(); }
+function applySort(arr) {
+  return arr.sort((a,b) => {
+    const ka=sortKey(a), kb=sortKey(b);
+    return sortOrder==='asc' ? ka.localeCompare(kb) : kb.localeCompare(ka);
+  });
+}
 function updateSortBtn() {
-  const btn = document.getElementById('sort-btn');
-  const label = document.getElementById('sort-label');
-  const arrow = document.getElementById('sort-arrow');
-  if (sortOrder === 'asc') {
-    btn.classList.add('asc'); btn.classList.remove('desc');
-    label.textContent = 'A→Z'; arrow.textContent = '↑';
-  } else {
-    btn.classList.add('desc'); btn.classList.remove('asc');
-    label.textContent = 'Z→A'; arrow.textContent = '↓';
-  }
+  const btn=document.getElementById('sort-btn');
+  document.getElementById('sort-label').textContent = sortOrder==='asc' ? 'A→Z' : 'Z→A';
+  document.getElementById('sort-arrow').textContent = sortOrder==='asc' ? '↑' : '↓';
 }
-
 document.getElementById('sort-btn').addEventListener('click', () => {
-  sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+  sortOrder = sortOrder==='asc' ? 'desc' : 'asc';
   updateSortBtn();
   filter(document.getElementById('search').value);
 });
 
+// ============================================================
+// フィルター・グリッド
+// ============================================================
 function filter(q) {
   q = q.toLowerCase().trim();
   let base = q ? ALL.filter(r =>
@@ -212,12 +306,11 @@ function filter(q) {
     (r.label||'').toLowerCase().includes(q) ||
     (r.catalog||'').toLowerCase().includes(q)
   ) : [...ALL];
-
   filtered = applySort(base);
   rendered = 0;
   document.getElementById('grid').innerHTML = '';
   document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
-  document.getElementById('count').textContent = `${filtered.length} 件`;
+  document.getElementById('count').textContent = filtered.length + ' 件';
   renderMore();
 }
 
@@ -230,9 +323,9 @@ function renderMore() {
     const div = document.createElement('div');
     div.className = 'card';
     div.dataset.idx = i;
-    const src = THUMB + rec.filename;
     const label = rec.artist_ja || rec.artist_en || rec.filename;
-    div.innerHTML = `<img src="${src}" alt="${label}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+    div.innerHTML = `<img src="${THUMB+rec.filename}" alt="${label}" loading="lazy"
+      onerror="this.style.display='none';this.nextSibling.style.display='flex'">
       <div class="no-img" style="display:none">${label}</div>`;
     div.addEventListener('click', () => openModal(i));
     if (markedFiles.has(rec.filename)) div.classList.add('marked');
@@ -242,15 +335,11 @@ function renderMore() {
   rendered = end;
 }
 
-// 無限スクロール
 window.addEventListener('scroll', () => {
   if (rendered < filtered.length &&
-      window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-    renderMore();
-  }
+      window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) renderMore();
 });
 
-// 検索
 const searchEl = document.getElementById('search');
 const clearBtn = document.getElementById('clear-btn');
 let searchTimer;
@@ -260,20 +349,22 @@ searchEl.addEventListener('input', e => {
   searchTimer = setTimeout(() => filter(e.target.value), 200);
 });
 clearBtn.addEventListener('click', () => {
-  searchEl.value = '';
-  clearBtn.style.display = 'none';
-  filter('');
-  searchEl.focus();
+  searchEl.value = ''; clearBtn.style.display = 'none';
+  filter(''); searchEl.focus();
 });
 
-// モーダル
+// ============================================================
+// レコード詳細モーダル
+// ============================================================
 function openModal(idx) {
   const rec = filtered[idx];
+  currentRec = rec;
   document.getElementById('modal-img').src = IMAGES + rec.filename;
   document.getElementById('modal-artist').textContent = rec.artist_ja || rec.artist_en || '';
   document.getElementById('modal-album').textContent = rec.album_ja || rec.album_en || '';
   document.getElementById('modal-artist-en').textContent =
-    (rec.artist_en && rec.artist_en !== (rec.artist_ja||'')) ? rec.artist_en + (rec.album_en ? ' / ' + rec.album_en : '') : '';
+    (rec.artist_en && rec.artist_en !== (rec.artist_ja||''))
+      ? rec.artist_en + (rec.album_en ? ' / ' + rec.album_en : '') : '';
 
   const meta = [];
   if (rec.label)   meta.push(['レーベル', rec.label]);
@@ -284,11 +375,8 @@ function openModal(idx) {
     `<div class="meta-row"><span class="meta-label">${k}</span><span class="meta-value">${v}</span></div>`
   ).join('');
 
-  // 原寸ボタン
-  const fullBtn = document.getElementById('full-img-btn');
-  fullBtn.href = IMAGES + rec.filename;
+  document.getElementById('full-img-btn').href = IMAGES + rec.filename;
 
-  // リンクボタン
   const links = [];
   if (rec.apple_url)   links.push(`<a class="link-btn btn-apple" href="${rec.apple_url}" target="_blank"><span class="icon">🎵</span>Apple Musicで開く</a>`);
   if (rec.spotify_url) links.push(`<a class="link-btn btn-spotify" href="${rec.spotify_url}" target="_blank"><span class="icon">🎧</span>Spotifyで検索</a>`);
@@ -296,26 +384,26 @@ function openModal(idx) {
   if (rec.discogs_url) links.push(`<a class="link-btn btn-discogs" href="${rec.discogs_url}" target="_blank"><span class="icon">D</span>Discogsで開く</a>`);
   document.getElementById('modal-links').innerHTML = links.join('');
 
-  // 削除マークボタン
-  currentModalIdx = idx;
+  // 削除マーク
   const markBtn = document.getElementById('mark-btn');
-  const filename = rec.filename;
-  updateMarkBtn(markBtn, filename);
+  updateMarkBtn(markBtn, rec.filename);
   markBtn.onclick = () => {
-    if (markedFiles.has(filename)) {
-      markedFiles.delete(filename);
-    } else {
-      markedFiles.add(filename);
-    }
-    updateMarkBtn(markBtn, filename);
+    markedFiles.has(rec.filename) ? markedFiles.delete(rec.filename) : markedFiles.add(rec.filename);
+    updateMarkBtn(markBtn, rec.filename);
     updateDeleteBar();
-    // グリッドのカードにも反映
-    const cards = document.querySelectorAll('.card');
-    cards.forEach(c => {
-      if (filtered[parseInt(c.dataset.idx)]?.filename === filename) {
-        c.classList.toggle('marked', markedFiles.has(filename));
-      }
+    document.querySelectorAll('.card').forEach(c => {
+      if (filtered[parseInt(c.dataset.idx)]?.filename === rec.filename)
+        c.classList.toggle('marked', markedFiles.has(rec.filename));
     });
+  };
+
+  // WANTED追加ボタン
+  const wBtn = document.getElementById('wanted-add-btn');
+  wBtn.onclick = () => {
+    closeModal();
+    // メンバー選択を促す
+    document.querySelectorAll('.member-btn').forEach(b => b.classList.remove('active'));
+    alert('WANTEDリストに追加するメンバーボタン（浅/伊/追/J/T/広）をタップしてください。\nその後、モーダル内の「WANTED LISTに追加」を押してください。');
   };
 
   document.getElementById('modal-bg').classList.add('open');
@@ -327,55 +415,251 @@ function updateMarkBtn(btn, filename) {
   btn.classList.toggle('marked', marked);
   btn.textContent = marked ? '✓ 削除対象から外す' : '🗑 削除対象にマーク';
 }
-
 function updateDeleteBar() {
   const bar = document.getElementById('delete-bar');
-  const count = document.getElementById('delete-count');
-  if (markedFiles.size > 0) {
-    bar.classList.add('visible');
-    count.textContent = `${markedFiles.size}件を削除対象にマーク`;
-  } else {
-    bar.classList.remove('visible');
-  }
+  document.getElementById('delete-count').textContent = markedFiles.size + '件を削除対象にマーク';
+  bar.classList.toggle('visible', markedFiles.size > 0);
 }
 
 document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-bg').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-bg')) closeModal();
 });
-
 function closeModal() {
   document.getElementById('modal-bg').classList.remove('open');
   document.body.style.overflow = '';
 }
+document.addEventListener('keydown', e => { if (e.key==='Escape') { closeModal(); closeWanted(); } });
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-// 削除キャンセル
 document.getElementById('delete-cancel').addEventListener('click', () => {
-  markedFiles.clear();
-  updateDeleteBar();
+  markedFiles.clear(); updateDeleteBar();
   document.querySelectorAll('.card.marked').forEach(c => c.classList.remove('marked'));
 });
-
-// JSONダウンロード
 document.getElementById('delete-exec').addEventListener('click', () => {
-  if (markedFiles.size === 0) return;
-  if (!confirm(`${markedFiles.size}件を削除したrecords.jsonをダウンロードします。
-ダウンロード後、~/webapp/records.jsonに上書きしてください。`)) return;
+  if (!markedFiles.size) return;
+  if (!confirm(markedFiles.size + '件を削除したrecords.jsonをダウンロードします。')) return;
   const newData = ALL.filter(r => !markedFiles.has(r.filename));
-  const blob = new Blob([JSON.stringify(newData, null, 2)], {type: 'application/json'});
+  const blob = new Blob([JSON.stringify(newData, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'records.json';
   a.click();
-  alert(`ダウンロード完了。
-~/webapp/records.jsonに上書き後、以下を実行してください：
+});
 
-cd ~/webapp
-git add records.json
-git commit -m "レコード削除"
-git push`);
+// ============================================================
+// メンバーボタン → WANTEDモーダル
+// ============================================================
+document.querySelectorAll('.member-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const member = btn.dataset.member;
+    // アクティブ状態切り替え
+    document.querySelectorAll('.member-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMember = member;
+    openWanted(member);
+  });
+});
+
+async function openWanted(member) {
+  document.getElementById('wanted-title').textContent = '🎯 ' + member + ' の WANTED LIST';
+  document.getElementById('wanted-list-title').textContent = member + ' のWANTED LIST';
+  document.getElementById('discogs-results').innerHTML = '';
+  document.getElementById('wanted-artist-input').value = '';
+  document.getElementById('wanted-album-input').value = '';
+  document.getElementById('wanted-modal-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // WANTEDリストをSupabaseから取得
+  await loadWantedList(member);
+
+  // currentRecがある場合、直接追加オプションを表示
+  if (currentRec) {
+    showAddCurrentRec(member);
+  }
+}
+
+function showAddCurrentRec(member) {
+  const rec = currentRec;
+  const area = document.getElementById('wanted-search-area');
+  const existingQuick = document.getElementById('quick-add-area');
+  if (existingQuick) existingQuick.remove();
+
+  const div = document.createElement('div');
+  div.id = 'quick-add-area';
+  div.style.cssText = 'padding:12px 16px;background:#1a2a1a;border-bottom:1px solid #2a3a2a';
+  div.innerHTML = `
+    <div style="font-size:12px;color:#4caf50;margin-bottom:8px">📀 このアルバムを追加しますか？</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="${IMAGES+rec.filename}" style="width:48px;height:48px;object-fit:cover;border-radius:6px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${rec.artist_en||rec.artist_ja||''}</div>
+        <div style="font-size:12px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${rec.album_en||rec.album_ja||''}</div>
+      </div>
+      <button onclick="addToWanted('${member}', ${JSON.stringify(rec).replace(/'/g,"\\'")})"
+        style="padding:8px 14px;background:#4caf50;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
+        追加
+      </button>
+    </div>`;
+  area.parentNode.insertBefore(div, area);
+}
+
+async function addToWanted(member, rec) {
+  const imageUrl = IMAGES + rec.filename;
+  try {
+    await sbFetch('wanted_list', {
+      method: 'POST',
+      body: JSON.stringify({
+        member,
+        artist_en: rec.artist_en || '',
+        artist_ja: rec.artist_ja || '',
+        album_en:  rec.album_en  || '',
+        album_ja:  rec.album_ja  || '',
+        discogs_id:  rec.discogs_id  || '',
+        discogs_url: rec.discogs_url || '',
+        image_url:   imageUrl,
+        catalog: rec.catalog || '',
+        label:   rec.label   || '',
+      })
+    });
+    currentRec = null;
+    const q = document.getElementById('quick-add-area');
+    if (q) q.remove();
+    await loadWantedList(member);
+    alert('WANTED LISTに追加しました！');
+  } catch(e) {
+    alert('追加に失敗しました: ' + e.message);
+  }
+}
+
+// ============================================================
+// Discogs検索
+// ============================================================
+document.getElementById('wanted-search-btn').addEventListener('click', searchDiscogs);
+document.getElementById('wanted-artist-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchDiscogs();
+});
+
+async function searchDiscogs() {
+  const artist = document.getElementById('wanted-artist-input').value.trim();
+  const album  = document.getElementById('wanted-album-input').value.trim();
+  if (!artist) { alert('アーティスト名を入力してください'); return; }
+
+  const resultsEl = document.getElementById('discogs-results');
+  resultsEl.innerHTML = '<div class="discogs-searching">Discogsを検索中...</div>';
+
+  try {
+    const params = new URLSearchParams({
+      artist, type: 'release', per_page: 10,
+      token: DISCOGS_TOKEN
+    });
+    if (album) params.set('release_title', album);
+
+    const res = await fetch(`https://api.discogs.com/database/search?${params}`, {
+      headers: {'User-Agent': 'PICHICHIrecords/1.0'}
+    });
+    const data = await res.json();
+    const results = data.results || [];
+
+    if (!results.length) {
+      resultsEl.innerHTML = '<div class="discogs-searching">見つかりませんでした</div>';
+      return;
+    }
+
+    resultsEl.innerHTML = results.map((r,i) => `
+      <div class="discogs-item" data-idx="${i}">
+        <img src="${r.cover_image||''}" alt="" onerror="this.src=''">
+        <div class="discogs-item-info">
+          <div class="discogs-item-title">${r.title||''}</div>
+          <div class="discogs-item-sub">${r.year||''} ${r.label?r.label[0]||'':''} ${r.catno||''}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // クリックでWANTEDに追加
+    resultsEl.querySelectorAll('.discogs-item').forEach((el, i) => {
+      el.addEventListener('click', async () => {
+        const r = results[i];
+        const [artistName, albumName] = (r.title||'').split(' - ');
+        try {
+          await sbFetch('wanted_list', {
+            method: 'POST',
+            body: JSON.stringify({
+              member: currentMember,
+              artist_en: artistName || r.title || '',
+              artist_ja: '',
+              album_en:  albumName || '',
+              album_ja:  '',
+              discogs_id:  String(r.id||''),
+              discogs_url: `https://www.discogs.com/release/${r.id}`,
+              image_url:   r.cover_image || '',
+              catalog: r.catno || '',
+              label:   r.label ? r.label[0] : '',
+            })
+          });
+          resultsEl.innerHTML = '';
+          await loadWantedList(currentMember);
+          alert('WANTED LISTに追加しました！');
+        } catch(e) {
+          alert('追加に失敗しました: ' + e.message);
+        }
+      });
+    });
+  } catch(e) {
+    resultsEl.innerHTML = '<div class="discogs-searching">検索エラー: ' + e.message + '</div>';
+  }
+}
+
+// ============================================================
+// WANTEDリスト表示・削除
+// ============================================================
+async function loadWantedList(member) {
+  const listEl = document.getElementById('wanted-list');
+  listEl.innerHTML = '<div class="wanted-empty">読み込み中...</div>';
+  try {
+    const data = await sbFetch(`wanted_list?member=eq.${encodeURIComponent(member)}&order=created_at.desc`);
+    if (!data.length) {
+      listEl.innerHTML = '<div class="wanted-empty">まだリストにアルバムがありません</div>';
+      return;
+    }
+    listEl.innerHTML = data.map(item => `
+      <div class="wanted-item">
+        <img src="${item.image_url||''}" alt="" onerror="this.src=''">
+        <div class="wanted-item-info">
+          <div class="wanted-item-artist">${item.artist_en||item.artist_ja||''}</div>
+          <div class="wanted-item-album">${item.album_en||item.album_ja||''}</div>
+          ${item.discogs_url ? `<a href="${item.discogs_url}" target="_blank" style="font-size:11px;color:#888">Discogs</a>` : ''}
+        </div>
+        <button class="wanted-item-del" onclick="deleteWanted('${item.id}', '${member}')">🗑</button>
+      </div>
+    `).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div class="wanted-empty">読み込みエラー: ' + e.message + '</div>';
+  }
+}
+
+async function deleteWanted(id, member) {
+  if (!confirm('このアルバムをWANTED LISTから削除しますか？')) return;
+  try {
+    await sbFetch(`wanted_list?id=eq.${id}`, {method:'DELETE'});
+    await loadWantedList(member);
+  } catch(e) {
+    alert('削除に失敗しました: ' + e.message);
+  }
+}
+
+function closeWanted() {
+  document.getElementById('wanted-modal-bg').classList.remove('open');
+  document.body.style.overflow = '';
+  document.querySelectorAll('.member-btn').forEach(b => b.classList.remove('active'));
+  currentMember = null;
+  currentRec = null;
+  const q = document.getElementById('quick-add-area');
+  if (q) q.remove();
+}
+
+document.getElementById('wanted-close').addEventListener('click', closeWanted);
+document.getElementById('wanted-modal-bg').addEventListener('click', e => {
+  if (e.target === document.getElementById('wanted-modal-bg')) closeWanted();
 });
 
 init();
